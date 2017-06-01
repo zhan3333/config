@@ -17,6 +17,7 @@ class ConfigTest extends PHPUnit_Framework_TestCase
         $path = __DIR__.'/mocks/pass';
         $config = new Config($path);
         $this->assertEquals($config->get('config1.d.d1'), 'd');
+        $this->assertEquals($config['config1.d.d1'], 'd');
     }
 
     /**
