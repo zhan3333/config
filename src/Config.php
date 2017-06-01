@@ -22,37 +22,79 @@ class Config implements iConfig, ArrayAccess
      */
     protected $cache = array();
 
-    public function __construct($configPath)
+    /**
+     * Config constructor.
+     * @param $path
+     */
+    public function __construct($path)
     {
-        $this->loadConfig($configPath);
+        $this->loadConfig($path);
     }
 
     /**
      * 加载文件夹或者文件
-     * @param $path
+     * @param string|array $path
      */
     public function loadConfig($path)
     {
+        if (is_string($path)) {
+            $this->load($path);
+        } elseif (is_array($path)) {
+            foreach ($path as $item) {
+                $this->load($item);
+            }
+        }
+    }
+
+    /**
+     * 根据路径类型加载文件或者文件夹
+     * @param $path
+     * @throws ConfigException
+     */
+    private function load($path)
+    {
         if (is_dir($path)) {
-            $handle = opendir($path);
-            while (false !== ($file = readdir($handle))) {
-                if ($file != '.' && $file != '..') {
-                    $configExt = explode('.', $file)[1];
-                    if ($configExt == 'php') {
-                        $configName = explode('.', $file)[0];
-                        $this->data[$configName] = require $path . '/' . $file;
-                    }
-                }
-            }
-            if (empty($this->data)) {
-                throw new ConfigException("path {$path} is empty");
-            }
+            $this->loadDir($path);
         } elseif (is_file($path)) {
-            $info = pathinfo($path);
-            $filename = $info['filename'];
-            $this->data[$filename] = require $path;
+            $this->loadFile($path);
         } else {
             throw new ConfigException("path {$path} not found");
+        }
+    }
+
+    /**
+     * 加载文件
+     * @param $filePath
+     * @throws ConfigException
+     */
+    private function loadFile($filePath)
+    {
+        $info = pathinfo($filePath);
+        $filename = $info['filename'];
+        $ext = $info['extension'];
+        if ($ext != 'php') throw new ConfigException("file {$filename}.{$ext} not support");
+        $this->data[$filename] = require $filePath;
+    }
+
+    /**
+     * 加载文件夹
+     * @param $dir
+     * @throws ConfigException
+     */
+    private function loadDir($dir)
+    {
+        $handle = opendir($dir);
+        while (false !== ($file = readdir($handle))) {
+            if ($file != '.' && $file != '..') {
+                $configExt = explode('.', $file)[1];
+                if ($configExt == 'php') {
+                    $configName = explode('.', $file)[0];
+                    $this->data[$configName] = require $dir . '/' . $file;
+                }
+            }
+        }
+        if (empty($this->data)) {
+            throw new ConfigException("path {$dir} is empty");
         }
     }
 
