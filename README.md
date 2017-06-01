@@ -9,6 +9,8 @@
 ```
 require 'vendor/autoload.php';
 
+use LoadConfig\Config;
+
 // 加载文件夹
 $path = '/rootpath/config';
 $config = new Config($path);
